@@ -1,0 +1,7 @@
+node_modules
+public/bundle
+!public/index.html
+
+src/lib*/
+sms/*
+.env

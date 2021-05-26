@@ -1,0 +1,22 @@
+{
+    "typescript.tsdk": "node_modules\\typescript\\lib",
+    "editor.formatOnSave": false,
+    "editor.tabSize": 2,
+    "[typescript]": {  // .ts
+        "editor.formatOnSave": true,
+        "editor.defaultFormatter": "esbenp.prettier-vscode"
+    },
+    "[javascript]": {  // .js
+        "editor.formatOnSave": true,
+        "editor.defaultFormatter": "esbenp.prettier-vscode"
+    },
+    "[typescriptreact]": { // .tsx
+        "editor.formatOnSave": true,
+        "editor.defaultFormatter": "esbenp.prettier-vscode"
+    },
+    "[javascriptreact]": { // .jsx
+        "editor.formatOnSave": true,
+        "editor.defaultFormatter": "esbenp.prettier-vscode"
+    },
+    "npm.packageManager": "yarn"
+}
