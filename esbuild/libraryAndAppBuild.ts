@@ -1,12 +1,13 @@
 import { build, BuildResult } from "esbuild";
 import { externalGlobalPlugin } from "esbuild-plugin-external-global";
+import { BuildsEntity } from "./builds";
 
-async function BuildIntegrationApp(): Promise<BuildResult> {
+async function BuildIntegrationApp({ outdir }): Promise<BuildResult> {
   const b = await build({
     entryPoints: ["./src/index.tsx"],
-    outdir: "./public/bundle",
+    outdir,
     external: ["react", "react-dom", "lib-esm/*"],
-    minify: false,
+    minify: true,
     bundle: true,
     sourcemap: true,
     tsconfig: "./tsconfig.json",
@@ -40,14 +41,7 @@ async function BuildIntegrationApp(): Promise<BuildResult> {
   return b;
 }
 
-async function BuildEsmLibrary({ outdir, sourcemap }) {
-  const defineLibrary = {};
-  for (const k in process.env) {
-    if (k.indexOf("LIBRARY_") !== -1) {
-      const varName = k.split("LIBRARY_")[1];
-      defineLibrary[varName] = JSON.stringify(process.env[k]);
-    }
-  }
+async function BuildEsmLibrary({ outdir, sourcemap, define }) {
   const b = await build({
     entryPoints: ["./lib/FileRenderer.tsx"],
     outdir,
@@ -58,7 +52,7 @@ async function BuildEsmLibrary({ outdir, sourcemap }) {
     tsconfig: "./tsconfig.definitions.json",
     external: ["react", "react-dom"],
     watch: true,
-    define: defineLibrary,
+    define,
     plugins: [
       externalGlobalPlugin({
         react: "window.React",
@@ -85,8 +79,13 @@ async function handleBuild(
   }
 }
 
-export const GenerateIntegrationApp = (buildName: string) =>
-  handleBuild(buildName, () => BuildIntegrationApp());
+export const GenerateIntegrationApp = (
+  buildName: string,
+  { outdir }: BuildsEntity["opts"]
+) => handleBuild(buildName, () => BuildIntegrationApp({ outdir }));
 
-export const GenerateEsmLibrary = (buildName: string, { outdir, sourcemap }) =>
-  handleBuild(buildName, () => BuildEsmLibrary({ outdir, sourcemap }));
+export const GenerateEsmLibrary = (
+  buildName: string,
+  { outdir, sourcemap, define }: BuildsEntity["opts"]
+) =>
+  handleBuild(buildName, () => BuildEsmLibrary({ outdir, sourcemap, define }));

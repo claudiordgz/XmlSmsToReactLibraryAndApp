@@ -1,7 +1,9 @@
 node_modules
 public/bundle
 !public/index.html
+!public/404.html
 
 src/lib*/
 sms/*
+!sms/sms-test.xml.txt
 .env

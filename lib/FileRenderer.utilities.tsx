@@ -26,14 +26,14 @@ export function xmlDataToString(xmlData: any): Promise<RootObject> {
   });
 }
 
-function parseUnixTimestamp(timestamp: number): string | null {
+function parseUnixTimestamp(timestamp: number): Date | null {
   let date = null;
-  if (timestamp !== 0) {
+  if (timestamp > 0) {
     const digits = (Math.log(timestamp) * Math.LOG10E + 1) | 0;
     date = digits === 10 ? timestamp * 1000 : timestamp;
-    date = new Date(date).toLocaleString();
+    date = new Date(date);
   }
-  return date;
+  return date as Date | null;
 }
 
 function packMessageForUi(message: Sms | Mms): SmsUi | MmsUi {
@@ -43,12 +43,14 @@ function packMessageForUi(message: Sms | Mms): SmsUi | MmsUi {
       text: message.body,
       dateSent: parseUnixTimestamp(message.date_sent),
       dateReceived: parseUnixTimestamp(message.date),
+      type: message.type,
     };
   } else {
     return {
       messageType: "mms",
       dateSent: parseUnixTimestamp(message.date_sent),
       dateReceived: parseUnixTimestamp(message.date),
+      type: message.msg_box,
       parts: message.parts[0].part.map((part) => ({
         type: part.ct,
         data: part.data || part.text,
@@ -63,11 +65,11 @@ function getMessagesInOrder(xmlData: RootObject) {
   let results: Array<SmsUi | MmsUi> = [];
   while (true) {
     let nextMms;
-    if (mmsI !== xmlData.mms.length) {
+    if (xmlData.mms && mmsI !== xmlData.mms.length) {
       nextMms = xmlData.mms[mmsI];
     }
     let nextSms;
-    if (smsI !== xmlData.sms.length) {
+    if (xmlData.sms && smsI !== xmlData.sms.length) {
       nextSms = xmlData.sms[smsI];
     }
     if (nextMms === undefined && nextSms === undefined) {

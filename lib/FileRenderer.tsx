@@ -1,48 +1,9 @@
-import { css, injectGlobal } from "@emotion/css";
+import { css } from "@emotion/css";
 import React, { useEffect, useState } from "react";
 import { MmsUi, SmsUi } from "./FileRenderer.schema";
 import { processXml, xmlDataToString } from "./FileRenderer.utilities";
 
-declare var PATH_TO_XML_MESSAGE_BACKUP: string;
-
 const parse = require("html-react-parser");
-const smsMessages = require(PATH_TO_XML_MESSAGE_BACKUP);
-
-declare var MESSAGE_SELF_NAME: string | undefined;
-declare var MESSAGE_OTHER_NAME: string | undefined;
-declare var MESSAGE_SELF_PHONENUMBER: string | undefined;
-declare var MESSAGE_OTHER_PHONENUMBER: string | undefined;
-
-const configuration = {
-  selfName:
-    typeof MESSAGE_SELF_NAME !== "undefined"
-      ? MESSAGE_SELF_NAME
-      : "No name provided in .env",
-  selfPhoneNumber:
-    typeof MESSAGE_SELF_PHONENUMBER !== "undefined"
-      ? MESSAGE_SELF_PHONENUMBER
-      : "No phonenumber provided in .env",
-  otherName:
-    typeof MESSAGE_OTHER_NAME !== "undefined"
-      ? MESSAGE_OTHER_PHONENUMBER
-      : "No name provided in .env",
-  otherPhoneNumber:
-    typeof MESSAGE_OTHER_PHONENUMBER !== "undefined"
-      ? MESSAGE_OTHER_PHONENUMBER
-      : "No phonenumber provided in .env",
-};
-
-injectGlobal`
-  * {
-    box-sizing: border-box;
-  }
-  body {
-    font-family: Arial, Helvetica, sans-serif;
-    font-style: normal;
-    font-weight: 400;
-    font-size: small;
-  }
-`;
 
 interface SmsMessageProps {
   msg: SmsUi;
@@ -50,10 +11,11 @@ interface SmsMessageProps {
 
 const SmsMessage: React.FC<SmsMessageProps> = ({ msg }) => {
   return (
-    <div className={`message sms ${!msg.dateSent ? "self" : "other"}`}>
+    <div className={`message sms ${msg.type === 2 ? "self" : "other"}`}>
       <span className="text">{msg.text}</span>
       <span className="date">
-        {msg.dateSent} ( Readable {msg.dateReceived} )
+        {msg.dateSent ? msg.dateSent.toLocaleString() : null} ( Readable{" "}
+        {msg.dateReceived ? msg.dateReceived.toLocaleString() : null} )
       </span>
     </div>
   );
@@ -65,7 +27,7 @@ interface MmsMessageProps {
 
 const MmsMessage: React.FC<MmsMessageProps> = ({ msg }) => {
   return (
-    <div className={`message mms ${!msg.dateSent ? "self" : "other"}`}>
+    <div className={`message mms ${msg.type === 2 ? "self" : "other"}`}>
       <div className="content">
         {msg.parts.map((part, i) => {
           if (part.type.indexOf("image") !== -1) {
@@ -91,18 +53,43 @@ const MmsMessage: React.FC<MmsMessageProps> = ({ msg }) => {
         })}
       </div>
       <span className="date">
-        {msg.dateSent} ( Readable {msg.dateReceived} )
+        {msg.dateSent ? msg.dateSent.toLocaleString() : null} ( Readable{" "}
+        {msg.dateReceived ? msg.dateReceived.toLocaleString() : null} )
       </span>
     </div>
   );
 };
 
-function FileRenderer() {
+const getText = (file: File) => {
+  return new Promise((res, rej) => {
+    const fr = new FileReader();
+    fr.onload = function (e) {
+      if (e && e.target) {
+        const data = e.target.result;
+        res(data);
+      } else {
+        rej(new Error("Must pass a valid File."));
+      }
+    };
+    fr.readAsText(file);
+  });
+};
+
+interface FileRendererProps {
+  file: File;
+  selfName: string;
+  selfPhoneNumber: string;
+  otherName: string;
+  otherPhoneNumber: string;
+}
+
+const FileRenderer: React.FC<FileRendererProps> = (props) => {
   const [messages, setMessages] = useState<Array<SmsUi | MmsUi>>([]);
 
   useEffect(() => {
     let requestCanceled = false;
     const waitForXml = async () => {
+      const smsMessages = await getText(props.file);
       const messagesRoot = await xmlDataToString(smsMessages);
       const messagesForUi = await processXml(messagesRoot);
       if (!requestCanceled) {
@@ -113,7 +100,7 @@ function FileRenderer() {
     return () => {
       requestCanceled = true;
     };
-  }, []);
+  }, [props]);
 
   if (messages.length === 0) {
     return null;
@@ -133,11 +120,10 @@ function FileRenderer() {
         `}
       >
         <span>
-          Messages exported from: {configuration.selfName}'s Phone (
-          {configuration.selfPhoneNumber})
+          Messages exported from: {props.selfName} ({props.selfPhoneNumber})
         </span>
         <span>
-          With: {configuration.otherName} ({configuration.otherPhoneNumber}){" "}
+          With: {props.otherName} ({props.otherPhoneNumber})
         </span>
       </div>
       <hr></hr>
@@ -202,6 +188,6 @@ function FileRenderer() {
       </div>
     </>
   );
-}
+};
 
 export default FileRenderer;

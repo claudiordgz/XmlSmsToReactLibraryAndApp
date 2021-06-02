@@ -142,14 +142,16 @@ export interface Mms extends Mm {
 export interface SmsUi {
   messageType: "sms";
   text: string;
-  dateSent: string | null;
-  dateReceived: string | null;
+  dateSent: Date | null;
+  dateReceived: Date | null;
+  type: number;
 }
 
 export interface MmsUi {
   messageType: "mms";
-  dateSent: string | null;
-  dateReceived: string | null;
+  dateSent: Date | null;
+  dateReceived: Date | null;
+  type: number;
   parts: {
     type: string;
     data: string;
