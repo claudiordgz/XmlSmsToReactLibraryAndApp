@@ -7,7 +7,7 @@ This project exists due to 2 reasons:
 
 It is meant to produce something like the following:
 
-![HelloWorld](.docs/img/HelloWorld.png)
+![HelloWorld](./docs/img/HelloWorld.png)
 
 ## Development
 
